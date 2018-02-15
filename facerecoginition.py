@@ -1,18 +1,25 @@
+import os
 import cv2
 import numpy as np
+from PIL import Image
+path='dataSet'
+recognizer=cv2.face.LBPHFaceRecognizer_create()
 
-facedetector = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-cap=cv2.VideoCapture(1)
-
-while(True):
-    ret, img = cap.read()
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    faces = facedetector.detectMultiScale(gray, 1.3, 5)
-    for (x,y,w,h) in faces:
-        cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
-
-    cv2.imshow('frame',img)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-cap.release()
+def getImagesWithID(path):
+    imagePaths=[os.path.join(path,f) for f in os.listdir(path)]
+    faces=[]
+    IDs=[]
+    for imagePath in imagePaths:
+        faceImg=Image.open(imagePath).convert('L')
+        faceNp=np.array(faceImg,'uint8')
+        ID=int(os.path.split(imagePath)[-1].split('.')[1])
+        faces.append(faceNp)
+        print ID
+        IDs.append(ID)
+        cv2.imshow("training",faceNp)
+        cv2.waitKey(10)
+    return IDs, faces
+IDs,faces=getImagesWithID(path)
+recognizer.train(faces,np.array(IDs))
+recognizer.save('recognizer/trainningData.yml')
 cv2.destroyAllWindows()
